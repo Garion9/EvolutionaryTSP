@@ -2,23 +2,23 @@ mod city;
 mod evolutionary_operators;
 mod fitness;
 
-use crate::city::*;
-use crate::evolutionary_operators::*;
-use crate::fitness::*;
+use crate::city::{City, generate_cities};
+use crate::evolutionary_operators::{cycle_crossover, generate_selection_odds, mutate, selection};
+use crate::fitness::{fitness, average_fitness, best_fitness};
 
 use rand::prelude::*;
 use plotters::prelude::*;
 
 fn main() {
-    let city_count: usize = 100;
-    let population_size: usize = 100;
+    let city_count: usize = 50;
+    let population_size: usize = 50;
     let generation_count: i32 = 20000;
-    let mutation_probability: f32 = 0.05;
+    let mutation_probability: f32 = 0.01;
 
     let mut best_fitnesses: Vec<f32> = Vec::new();
     let mut average_fitnesses: Vec<f32> = Vec::new();
 
-    let plot_save_location: &str = "images/tsp(2).png";
+    let plot_save_location: &str = "images/tsp(4).png";
 
     let selection_odds = generate_selection_odds(population_size);
 
