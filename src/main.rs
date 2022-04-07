@@ -7,12 +7,18 @@ use crate::evolutionary_operators::*;
 use crate::fitness::*;
 
 use rand::prelude::*;
+use plotters::prelude::*;
 
 fn main() {
-    let city_count = 100;
-    let population_size = 100;
-    let generation_count = 20000;
-    let mutation_probability = 0.1;
+    let city_count: usize = 100;
+    let population_size: usize = 100;
+    let generation_count: i32 = 20000;
+    let mutation_probability: f32 = 0.05;
+
+    let mut best_fitnesses: Vec<f32> = Vec::new();
+    let mut average_fitnesses: Vec<f32> = Vec::new();
+
+    let plot_save_location: &str = "images/tsp(2).png";
 
     let selection_odds = generate_selection_odds(population_size);
 
@@ -50,6 +56,9 @@ fn main() {
         new_population.append(offsprings.as_mut());
         population = new_population;
 
+        best_fitnesses.push(best_fitness(&population, &cities));
+        average_fitnesses.push(average_fitness(&population, &cities));
+
         if _i % 1000 == 999 {
             println!("current progress: finished generation {} out of {}", _i+1, generation_count);
             println!("best fitness: {}", best_fitness(&population, &cities));
@@ -66,6 +75,8 @@ fn main() {
     println!("best fitness: {}", best_fitness(&population, &cities));
     println!("average fitness: {}", average_fitness(&population, &cities));
     println!("==========================================================");
+
+    plot_evolution(best_fitnesses, average_fitnesses, plot_save_location);
 }
 
 
@@ -80,4 +91,27 @@ fn generate_initial_population(city_count: usize, population_size: usize) -> Vec
     }
 
     return population;
+}
+
+
+fn plot_evolution(best_fitnesses: Vec<f32>, average_fitnesses: Vec<f32>, save_location: &str) {
+    let root_area = BitMapBackend::new(save_location, (600, 400))
+        .into_drawing_area();
+    root_area.fill(&WHITE).unwrap();
+
+    let mut ctx = ChartBuilder::on(&root_area)
+        .set_label_area_size(LabelAreaPosition::Left, 40)
+        .set_label_area_size(LabelAreaPosition::Bottom, 40)
+        .caption("Travelling Salesman Problem (Evolutionary Algorithm)", ("sans-serif", 30))
+        .build_cartesian_2d(0..(average_fitnesses.len()+10), (average_fitnesses.iter().copied().fold(f32::INFINITY, &f32::min) as usize - 10)..(average_fitnesses.iter().copied().fold(f32::NEG_INFINITY, &f32::max) as usize + 10))
+        .unwrap();
+
+    ctx.configure_mesh().draw().unwrap();
+
+    ctx.draw_series(
+        LineSeries::new((0..(average_fitnesses.len())).map(|i:usize| (i, best_fitnesses[i] as usize)), &GREEN)
+    ).unwrap();
+    ctx.draw_series(
+        LineSeries::new((0..(average_fitnesses.len())).map(|i:usize| (i, average_fitnesses[i] as usize)), &BLUE)
+    ).unwrap();
 }
